@@ -167,6 +167,9 @@ class TickerService:
             logger.info(f"Updating attack data for round {new_round}")
             await game.update_attack_data(db, new_round)
             
+            logger.info(f"Broadcasting scoreboard update")
+            await self.broadcast_scoreboard_update(db)
+            
             # Archive current scores before recalculation
             logger.info(f"Logging TeamTasks to history for round {current_round}")
             all_teams = await teams.get_teams(db)
@@ -184,6 +187,25 @@ class TickerService:
             logger.info(f"Checker jobs submitted for round {new_round}: {job_stats}")
             
             logger.info(f"Round {new_round} ready")
+    
+    async def broadcast_scoreboard_update(self, db):
+        """Publish scoreboard update to Redis for WebSocket broadcast."""
+        try:
+            from lib.repositories import scoreboard
+            from lib.repositories.utils import get_redis_client
+            import json
+            
+            scoreboard_data = await scoreboard.construct_scoreboard(db)
+            
+            redis = get_redis_client()
+            event_data = {
+                "event_type": "scoreboard_update",
+                "event": "update_scoreboard",
+                "data": scoreboard_data["state"]
+            }
+            await redis.publish('adarena-events', json.dumps(event_data, default=str))
+        except Exception as e:
+            logger.error(f"Failed to broadcast scoreboard update: {e}", exc_info=True)
     
     async def run(self):
         """Main ticker loop. Checks every 100ms for start/round transitions."""

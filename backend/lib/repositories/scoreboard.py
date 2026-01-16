@@ -1,8 +1,10 @@
-from typing import Dict, List
+from typing import Dict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from lib.models import Team as TeamModel, Task as TaskModel, TeamTask
+from lib.repositories.game_state import get_real_round_from_db, get_round_start
+from lib.repositories.config import get_current_game_config
 
 
 async def construct_scoreboard(db: AsyncSession) -> Dict:
@@ -72,8 +74,49 @@ async def construct_scoreboard(db: AsyncSession) -> Dict:
     for idx, team_data in enumerate(team_scores, start=1):
         team_data["rank"] = idx
     
+    # Get current round and round start time
+    current_round = await get_real_round_from_db(db)
+    round_start = await get_round_start(current_round)
+    
+    # Get game config
+    config = await get_current_game_config(db)
+    if hasattr(config, '__dict__'):
+        config_dict = {k: v for k, v in config.__dict__.items() if not k.startswith('_')}
+    else:
+        config_dict = {}
+    
+    team_tasks_data = [
+        {
+            "team_id": tt.team_id,
+            "task_id": tt.task_id,
+            "status": tt.status,
+            "stolen": tt.stolen,
+            "lost": tt.lost,
+            "score": tt.score,
+            "checks": tt.checks,
+            "checks_passed": tt.checks_passed,
+            "message": tt.public_message or "",
+        }
+        for tt in teamtasks
+    ]
+    
     return {
-        "scoreboard": team_scores,
-        "teams": [{"id": t.id, "name": t.name} for t in teams],
-        "tasks": [{"id": t.id, "name": t.name} for t in tasks],
+        "state": {
+            "round": current_round,
+            "round_start": round_start,
+            "team_tasks": team_tasks_data,
+        },
+        "teams": [
+            {
+                "id": t.id,
+                "name": t.name,
+                "ip": t.ip,
+                "active": t.active
+            } for t in teams],
+        "tasks": [
+            {
+                "id": t.id,
+                "name": t.name
+            } for t in tasks],
+        "config": config_dict,
     }

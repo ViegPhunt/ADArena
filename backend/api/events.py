@@ -212,15 +212,16 @@ async def redis_event_listener():
                     data = json.loads(message['data'])
                     event_type = data.get('event_type')
                     
+                    logger.info(f"Received Redis event: {event_type}")
+                    
                     if event_type == 'scoreboard_update':
                         await manager.broadcast_game_event(data)
+                        logger.info(f"Broadcasted to {len(manager.game_events)} game clients")
                     elif event_type in ['flag_submission', 'checker_update']:
                         await manager.broadcast_live_event(data)
-                    
-                    logger.debug(f"Broadcasted event: {event_type}")
                 except json.JSONDecodeError:
                     logger.error(f"Invalid JSON from Redis: {message['data']}")
-            
+
             await asyncio.sleep(0.1)
     except asyncio.CancelledError:
         logger.info("Redis event listener cancelled")
@@ -243,18 +244,6 @@ async def health_check():
         "game_connections": len(manager.game_events),
         "live_connections": len(manager.live_events),
     }
-
-
-@app.post("/api/events/broadcast/scoreboard")
-async def broadcast_scoreboard_update():
-    factory = get_session_factory()
-    async with factory() as db:
-        scoreboard_data = await scoreboard.construct_scoreboard(db)
-        await manager.broadcast_game_event({
-            "event": "scoreboard_update",
-            "data": scoreboard_data
-        })
-    return {"status": "broadcasted"}
 
 
 if __name__ == '__main__':
