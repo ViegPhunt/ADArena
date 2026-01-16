@@ -43,8 +43,9 @@ server {
         include proxy_params_ws;
     }
 
-    location /api/events {
+    location /api/events/ {
         set $backend events:5000;
+        rewrite ^/api/events/(.*) /$1 break;
         proxy_pass http://$backend;
         include proxy_params_ws;
     }

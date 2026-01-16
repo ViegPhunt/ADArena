@@ -22,7 +22,7 @@ else
   set -e
 
   echo "[*] Resetting & initializing database"
-  python3 ./scripts/full_reset.py
+  python3 ./scripts/reset.py
 
   echo "[+] Successfully initialized"
 fi
