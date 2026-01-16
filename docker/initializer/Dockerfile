@@ -1,4 +1,23 @@
-FROM adarena-base:latest
+FROM python:3.13
+
+# ===== BEGIN: Base image inline =====
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=${PYTHONPATH}:/app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc libpq-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY backend/requirements.txt /requirements.txt
+RUN pip install -r /requirements.txt
+
+COPY docker/await_start.sh /await_start.sh
+COPY docker/db_check.py /db_check.py
+COPY docker/check_initialized.py /check_initialized.py
+RUN chmod +x /await_start.sh
+# ===== END: Base image inline =====
+
 
 COPY backend /app
 

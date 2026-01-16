@@ -36,7 +36,4 @@ def start(workers, checkers, jobs):
     
     print_status('SUCCESS', msg)
     
-    run_docker(['build', 'base'], env=env)
-    run_docker(['build', 'ticker'], env=env)
-    run_docker(['build', 'worker'], env=env)
-    run_docker(['up', '-d', '--build', '--scale', f'worker={workers}'], env=env)
+    run_docker(['up', '-d', '--scale', f'worker={workers}'], env=env)

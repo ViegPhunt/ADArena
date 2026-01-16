@@ -4,6 +4,7 @@ x-service: &default-ms
     dockerfile: ./docker/services/Dockerfile
     target: services
   image: adarena-service:latest
+  pull_policy: build
   env_file: &db-environment
     - ./docker/postgres_environment.env
     - ./docker/redis_environment.env
@@ -16,6 +17,7 @@ x-worker-service: &default-worker-ms
     dockerfile: ./docker/services/Dockerfile
     target: worker
   image: adarena-worker:latest
+  pull_policy: build
   volumes:
     - ./checkers/:/checkers/
 
@@ -25,6 +27,7 @@ services:
       context: .
       dockerfile: ./docker/Dockerfile.base
     image: adarena-base:latest
+    pull_policy: build
 
   worker:
     <<: *default-worker-ms
@@ -42,6 +45,7 @@ services:
       context: .
       dockerfile: ./docker/initializer/Dockerfile
     image: adarena-initializer:latest
+    pull_policy: build
     env_file: *db-environment
     volumes:
       - ./config.yml:/config.yml:ro
