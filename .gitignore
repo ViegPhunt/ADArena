@@ -15,6 +15,5 @@ checkers/*
 *.env
 /docker-compose-external.yml
 
-# dist/
-# node_modules/
-frontend/
+dist/
+node_modules/
