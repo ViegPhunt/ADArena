@@ -17,7 +17,7 @@ def get_redis_client() -> aioredis.Redis:
             password=redis_config.password if redis_config.password else None,
             decode_responses=True,
             socket_connect_timeout=5,
-            socket_timeout=5,
+            socket_timeout=None,
         )
     return _redis_client
 
