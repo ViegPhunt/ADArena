@@ -1,0 +1,144 @@
+version: '3.8'
+
+x-service: &default-ms
+  build:
+    context: .
+    dockerfile: ./docker/services/Dockerfile
+    target: services
+  image: adarena-service:latest
+  env_file: &db-environment
+    - ./docker_config/postgres_environment.env
+    - ./docker_config/redis_environment.env
+  restart: on-failure
+
+x-worker-service: &default-worker-ms
+  <<: *default-ms
+  build:
+    context: .
+    dockerfile: ./docker/services/Dockerfile
+    target: worker
+  image: adarena-worker:latest
+  volumes:
+    - ./checkers/:/checkers/
+
+services:
+  base:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.base
+    image: adarena-base:latest
+
+  worker:
+    <<: *default-worker-ms
+    environment:
+      - SERVICE=worker
+      - CHECKERS=${CHECKERS:-1}
+      - JOBS=${JOBS:-1}
+    depends_on:
+      - base
+      - postgres
+      - redis
+
+  initializer:
+    build:
+      context: .
+      dockerfile: ./docker/initializer/Dockerfile
+    image: adarena-initializer:latest
+    env_file: *db-environment
+    volumes:
+      - ./config.yml:/config.yml:ro
+    environment:
+      - CONFIG_PATH=/config.yml
+    restart: on-failure
+    depends_on:
+      - base
+      - postgres
+      - redis
+
+  ticker:
+    <<: *default-ms
+    environment:
+      - SERVICE=ticker
+    depends_on:
+      - base
+      - postgres
+      - redis
+
+  client-api:
+    <<: *default-ms
+    environment:
+      - SERVICE=api
+    depends_on:
+      - base
+      - postgres
+      - redis
+
+  admin-api:
+    <<: *default-ms
+    environment:
+      - SERVICE=admin
+    env_file:
+      - ./docker_config/services/admin.env
+      - ./docker_config/postgres_environment.env
+      - ./docker_config/redis_environment.env
+    depends_on:
+      - base
+      - postgres
+      - redis
+
+  events:
+    <<: *default-ms
+    environment:
+      - SERVICE=events
+    depends_on:
+      - base
+      - postgres
+      - redis
+
+  http-receiver:
+    <<: *default-ms
+    environment:
+      - SERVICE=http_receiver
+    depends_on:
+      - base
+      - postgres
+      - redis
+
+  nginx:
+    build:
+      context: .
+      dockerfile: ./docker/nginx/Dockerfile
+      args:
+        DNS_RESOLVER: 127.0.0.11
+    ports:
+      - "8080:80"
+      - "80:80"
+    restart: on-failure
+    depends_on:
+      - client-api
+      - admin-api
+      - events
+      - http-receiver
+
+  redis:
+    image: redis:6.2.5-alpine
+    command: [ "sh", "-c", "redis-server --requirepass $$REDIS_PASSWORD" ]
+    restart: on-failure
+    sysctls:
+      net.core.somaxconn: 1024
+    env_file:
+      - ./docker_config/redis_environment.env
+    ports:
+      - "6379:6379"
+
+  postgres:
+    image: postgres:13.4-alpine
+    volumes:
+      - ./docker_volumes/postgres/data/:/var/lib/postgresql/data/
+    env_file:
+      - ./docker_config/postgres_environment.env
+    restart: on-failure
+    command: "postgres --max-connections=200"
+    ports:
+      - "5432:5432"
+      - "6432:5432"

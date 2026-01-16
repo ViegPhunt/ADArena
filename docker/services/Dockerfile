@@ -1,0 +1,39 @@
+FROM adarena-base:latest AS base
+
+COPY backend /app
+COPY ./docker/services/functions.sh /functions.sh
+COPY ./docker/services/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+
+# Stage for regular services
+FROM base AS services
+CMD ["/entrypoint.sh"]
+
+
+# Stage for worker
+FROM base AS worker
+ENV PWNLIB_NOTERM=true
+
+# uncomment blocks to enable features
+
+### selenium (chromedriver) dependencies (from https://github.com/joyzoursky/docker-python-chromedriver) ###
+################
+#RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+#RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+#RUN apt-get update \
+#    && apt-get install -y --no-install-recommends google-chrome-stable unzip \
+#    && apt-get clean \
+#    && rm -rf /var/lib/apt/lists/*
+#RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE`/chromedriver_linux64.zip
+#RUN unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/
+################
+
+COPY ./checkers/requirements.txt /checker_requirements.txt
+RUN pip install -r /checker_requirements.txt
+
+COPY ./checkers /checkers
+
+USER nobody
+
+CMD ["/entrypoint.sh"]

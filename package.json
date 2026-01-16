@@ -1,0 +1,10 @@
+{
+  "name": "adarena",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "frontend:install": "npm --prefix frontend install",
+    "frontend:build": "npm --prefix frontend run build",
+    "build": "npm run frontend:install && npm run frontend:build"
+  }
+}

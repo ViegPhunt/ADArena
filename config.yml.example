@@ -1,0 +1,41 @@
+admin:
+  password: admin
+  username: admin
+
+game:
+  max_round: 100
+  round_time: 60
+
+  flag_prefix: ADArena
+  flag_lifetime: 5
+
+  timezone: Asia/Ho_Chi_Minh
+  start_time: 2026-01-01 00:00:00
+
+  default_score: 2500
+  game_hardness: 10.0
+  inflation: true
+
+tasks:
+  - name: service_1
+    checker: service_1/checker.py
+    checker_timeout: 10
+    checker_type: pfr
+    gets: 1
+    puts: 1
+    places: 1
+
+  - name: service_2
+    checker: service_2/checker.py
+    checker_timeout: 10
+    checker_type: pfr
+    gets: 1
+    puts: 1
+    places: 1
+
+teams:
+  - ip: 10.70.0.2
+    name: "Team 1"
+
+  - ip: 10.70.1.2
+    name: "Team 2"
