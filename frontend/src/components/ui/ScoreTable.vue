@@ -129,7 +129,7 @@
 <script>
 import { getTeamTaskBackground } from '@/utils/colors';
 import { statusesNames } from '@/config';
-import '@/assets/table.scss';
+import '@/assets/tables.scss';
 
 export default {
     props: {

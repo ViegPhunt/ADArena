@@ -68,7 +68,7 @@ import { getTeamTaskBackground } from '@/utils/colors';
 import { statusesNames } from '@/config';
 import Task from '@/models/task';
 import TeamTask from '@/models/teamTask';
-import '@/assets/styles/tables.scss';
+import '@/assets/tables.scss';
 
 export default {
     setup() {

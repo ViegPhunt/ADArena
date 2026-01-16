@@ -60,7 +60,7 @@ import { ref, onMounted, getCurrentInstance } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getTeamTaskBackground } from '@/utils/colors';
 import ErrorBox from '@/components/ui/ErrorBox.vue';
-import '@/assets/styles/tables.scss';
+import '@/assets/tables.scss';
 
 export default {
     components: {

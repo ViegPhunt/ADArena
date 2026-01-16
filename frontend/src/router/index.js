@@ -2,14 +2,14 @@ import { createRouter, createWebHistory } from 'vue-router';
 import axios from 'axios';
 import { serverUrl } from '@/config';
 
-const Scoreboard = () => import('@/features/scoreboard/views/Index.vue');
+const Scoreboard = () => import('@/features/scoreboard/views/Scoreboard.vue');
 const LiveScoreboard = () => import('@/features/scoreboard/views/Live.vue');
-const TeamScoreboard = () => import('@/features/scoreboard/views/TeamDetail.vue');
+const TeamScoreboard = () => import('@/features/scoreboard/views/TeamScoreboard.vue');
 
 const AdminLogin = () => import('@/features/admin/views/Login.vue');
-const AdminScoreboard = () => import('@/features/admin/views/Dashboard.vue');
-const TaskAdmin = () => import('@/features/admin/views/TaskDetail.vue');
-const TeamAdmin = () => import('@/features/admin/views/TeamDetail.vue');
+const AdminScoreboard = () => import('@/features/admin/views/AdminScoreboard.vue');
+const TaskAdmin = () => import('@/features/admin/views/Task.vue');
+const TeamAdmin = () => import('@/features/admin/views/Team.vue');
 const AdminTeamTaskLog = () => import('@/features/admin/views/TeamTaskLog.vue');
 
 const routes = [
