@@ -43,7 +43,7 @@ def _get_executor() -> ThreadPoolExecutor:
 # Configuration constants - loaded once from DB and cached
 _round_time: Optional[int] = None
 
-def _load_round_time() -> int:
+async def _load_round_time() -> int:
     """Load round_time from database once and cache it."""
     global _round_time
     
@@ -52,18 +52,14 @@ def _load_round_time() -> int:
     
     from lib.repositories import game
     
-    loop = asyncio.get_event_loop()
     session_factory = get_session_factory()
     
-    async def _fetch():
-        async with session_factory() as db:
-            config = await game.get_current_game_config(db)
-            return config.round_time
-    
-    _round_time = loop.run_until_complete(_fetch())
-    return _round_time
+    async with session_factory() as db:
+        config = await game.get_current_game_config(db)
+        _round_time = config.round_time
+        return _round_time
 
-def get_max_retries() -> int:
+async def get_max_retries() -> int:
     """Get maximum retry attempts for DB fallback.
     
     Scales with round_time:
@@ -78,7 +74,7 @@ def get_max_retries() -> int:
     if env_retries:
         return int(env_retries)
     
-    round_time = _load_round_time()
+    round_time = await _load_round_time()
     
     if round_time <= 60:
         return 2
@@ -89,7 +85,7 @@ def get_max_retries() -> int:
     else:
         return 7
 
-def get_initial_backoff() -> float:
+async def get_initial_backoff() -> float:
     """Get initial backoff delay for DB fallback retries.
     
     Defaults to 1.5% of round_time, clamped between 0.5s and 5.0s.
@@ -99,11 +95,11 @@ def get_initial_backoff() -> float:
     if env_backoff:
         return float(env_backoff)
     
-    round_time = _load_round_time()
+    round_time = await _load_round_time()
     # 1.5% of round_time, clamped between 0.5s and 5.0s
     return max(0.5, min(5.0, round_time * 0.015))
 
-def get_check_wait_timeout() -> float:
+async def get_check_wait_timeout() -> float:
     """Get CHECK wait timeout based on game config.
     
     Defaults to 60% of round_time to ensure PUT/GET have time to execute.
@@ -113,7 +109,7 @@ def get_check_wait_timeout() -> float:
     if env_timeout:
         return float(env_timeout)
     
-    round_time = _load_round_time()
+    round_time = await _load_round_time()
     return round_time * 0.6
 
 
@@ -189,7 +185,7 @@ async def wait_for_check_completion(
     Returns:
         CHECK status code (101-110), or None if timeout
     """
-    timeout = get_check_wait_timeout()
+    timeout = await get_check_wait_timeout()
     coordinator = await get_coordinator()
     check_status = await coordinator.wait_for_check(
         team_id, task_id, current_round, timeout
@@ -199,8 +195,8 @@ async def wait_for_check_completion(
     if check_status is None:
         logger.warning(f"CHECK pub/sub timeout for team {team_id} task {task_id}, trying DB fallback")
         
-        max_retries = get_max_retries()
-        backoff = get_initial_backoff()
+        max_retries = await get_max_retries()
+        backoff = await get_initial_backoff()
         
         session_factory = get_session_factory()
         for retry in range(1, max_retries + 1):
@@ -370,8 +366,8 @@ async def record_action_to_monitor(
         round=current_round,
         status=status,
         status_code=status_code,
-        public_message=public_message[:500],
-        private_message=private_message[:2000],
+        public_message=str(public_message)[:500] if public_message is not None else "N/A",
+        private_message=str(private_message)[:2000] if private_message is not None else "N/A",
         timestamp=asyncio.get_event_loop().time(),
-        flag=flag,
+        flag=flag if flag is not None else "",
     ))
