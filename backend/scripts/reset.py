@@ -232,7 +232,7 @@ async def print_team_tokens(teams: list[Team]):
 
     with open(tokens_file, 'w') as f:
         yaml.dump(teams_data, f, default_flow_style=False, allow_unicode=True)
-    print(f"\nFull details saved to: {tokens_file}\n")
+    print(f"Full details saved to: {tokens_file}\n")
 
     print('\n'.join(f"{team.name}:{team.token}" for team in teams))
 
