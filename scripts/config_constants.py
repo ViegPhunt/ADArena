@@ -17,6 +17,6 @@ DOCKER_DIR = BASE_DIR / 'docker'
 DOCKER_VOLUMES_DIR = BASE_DIR / 'docker_volumes'
 FULL_COMPOSE_PATH = BASE_DIR / 'docker-compose.yml'
 
-ADMIN_ENV_PATH = DOCKER_DIR / 'admin.env'
+ADMIN_ENV_PATH = DOCKER_DIR / 'services' / 'admin.env'
 POSTGRES_ENV_PATH = DOCKER_DIR / 'postgres_environment.env'
 REDIS_ENV_PATH = DOCKER_DIR / 'redis_environment.env'
