@@ -9,12 +9,12 @@ game:
   flag_prefix: ADArena
   flag_lifetime: 5
 
-  timezone: Asia/Ho_Chi_Minh
-  start_time: 2026-01-01 00:00:00
-
   default_score: 2500
   game_hardness: 10.0
   inflation: true
+
+  timezone: Asia/Ho_Chi_Minh
+  start_time: 2026-01-01 00:00:00
 
 tasks:
   - name: service_1
