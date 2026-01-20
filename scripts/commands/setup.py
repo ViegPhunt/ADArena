@@ -26,8 +26,8 @@ def setup(database, redis):
 
     config_utils.dump_config(config)
 
-    setup_db(config.storages.db)
-    setup_redis(config.storages.redis)
+    setup_db(config.storages.database)
+    setup_redis(config.storages.cache)
     setup_admin_api(config.admin)
 
     prepare_compose(database, redis)

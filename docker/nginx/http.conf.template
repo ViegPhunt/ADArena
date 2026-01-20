@@ -10,13 +10,13 @@ server {
     server_name default;
 
     location /api/client {
-        set $backend client-api:5000;
+        set $backend api-player:5000;
         proxy_pass http://$backend;
         include proxy_params;
     }
 
     location /api/admin {
-        set $backend admin-api:5000;
+        set $backend api-admin:5000;
         proxy_pass http://$backend;
         include proxy_params;
     }

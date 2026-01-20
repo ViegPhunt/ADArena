@@ -33,9 +33,3 @@ start_ticker() {
   cd /app
   python3 -m workers.ticker
 }
-
-start_worker() {
-  echo "[*] Starting Arq worker with ${CHECKERS:-1} checker(s), max ${JOBS:-1} jobs"
-  cd /app
-  python -m workers.worker
-}

@@ -75,8 +75,8 @@ def override_config(
 ):
     """Override storage backend addresses with external hosts."""
     overrides = [
-        (config.storages.db, database, 5432),
-        (config.storages.redis, redis, 6379),
+        (config.storages.database, database, 5432),
+        (config.storages.cache, redis, 6379),
     ]
 
     for storage_conf, value, default_port in overrides:
@@ -102,8 +102,8 @@ def build_full_config(config: config_models.BasicConfig) -> config_models.Config
     password = config.admin.password
 
     storages = config_models.StoragesConfig(
-        db=config_models.DatabaseConfig(user=username, password=password),
-        redis=config_models.RedisConfig(password=password),
+        database=config_models.DatabaseConfig(user=username, password=password),
+        cache=config_models.RedisConfig(password=password),
     )
 
     return config_models.Config(

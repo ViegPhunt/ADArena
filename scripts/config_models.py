@@ -19,21 +19,21 @@ class AdminConfig(BaseModel):
 class DatabaseConfig(BaseModel):
     user: str
     password: str
-    host: str = 'postgres'
+    host: str = 'database'
     port: int = 5432
     dbname: str = 'adarena'
 
 
 class RedisConfig(BaseModel):
     password: str
-    host: str = 'redis'
+    host: str = 'cache'
     port: int = 6379
     db: int = 0
 
 
 class StoragesConfig(BaseModel):
-    db: DatabaseConfig
-    redis: RedisConfig
+    database: DatabaseConfig
+    cache: RedisConfig
 
 
 class GameConfig(BaseModel):

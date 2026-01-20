@@ -2,33 +2,21 @@ x-service: &default-ms
   build:
     context: .
     dockerfile: ./docker/services/Dockerfile
-    target: services
-  image: adarena-service:latest
-  pull_policy: build
   env_file: &db-environment
     - ./docker/postgres_environment.env
     - ./docker/redis_environment.env
   restart: on-failure
 
 x-worker-service: &default-worker-ms
-  <<: *default-ms
   build:
     context: .
-    dockerfile: ./docker/services/Dockerfile
-    target: worker
-  image: adarena-worker:latest
-  pull_policy: build
+    dockerfile: ./docker/worker/Dockerfile
+  env_file: *db-environment
+  restart: on-failure
   volumes:
     - ./checkers/:/checkers/
 
 services:
-  base:
-    build:
-      context: .
-      dockerfile: ./docker/Dockerfile.base
-    image: adarena-base:latest
-    pull_policy: build
-
   worker:
     <<: *default-worker-ms
     environment:
@@ -36,16 +24,13 @@ services:
       - CHECKERS=${CHECKERS:-1}
       - JOBS=${JOBS:-1}
     depends_on:
-      - base
-      - postgres
-      - redis
+      - database
+      - cache
 
   initializer:
     build:
       context: .
       dockerfile: ./docker/initializer/Dockerfile
-    image: adarena-initializer:latest
-    pull_policy: build
     env_file: *db-environment
     volumes:
       - ./config.yml:/config.yml:ro
@@ -53,32 +38,30 @@ services:
       - CONFIG_PATH=/config.yml
     restart: on-failure
     depends_on:
-      - base
-      - postgres
-      - redis
+      - database
+      - cache
 
   ticker:
     <<: *default-ms
     environment:
       - SERVICE=ticker
     depends_on:
-      - base
-      - postgres
-      - redis
+      - database
+      - cache
 
-  client-api:
-    image: adarena-service:latest
-    env_file: *db-environment
-    restart: on-failure
+  api-player:
+    <<: *default-ms
     environment:
       - SERVICE=api
     depends_on:
       - ticker
-      - postgres
-      - redis
+      - database
+      - cache
 
-  admin-api:
-    image: adarena-service:latest
+  api-admin:
+    build:
+      context: .
+      dockerfile: ./docker/services/Dockerfile
     env_file:
       - ./docker/services/admin.env
       - ./docker/postgres_environment.env
@@ -88,32 +71,28 @@ services:
       - SERVICE=admin
     depends_on:
       - ticker
-      - postgres
-      - redis
+      - database
+      - cache
 
   events:
-    image: adarena-service:latest
-    env_file: *db-environment
-    restart: on-failure
+    <<: *default-ms
     environment:
       - SERVICE=events
     depends_on:
       - ticker
-      - postgres
-      - redis
+      - database
+      - cache
 
   http-receiver:
-    image: adarena-service:latest
-    env_file: *db-environment
-    restart: on-failure
+    <<: *default-ms
     environment:
       - SERVICE=http_receiver
     depends_on:
       - ticker
-      - postgres
-      - redis
+      - database
+      - cache
 
-  nginx:
+  gateway:
     build:
       context: .
       dockerfile: ./docker/nginx/Dockerfile
@@ -124,12 +103,12 @@ services:
       - "80:80"
     restart: on-failure
     depends_on:
-      - client-api
-      - admin-api
+      - api-player
+      - api-admin
       - events
       - http-receiver
 
-  redis:
+  cache:
     image: redis:6.2.5-alpine
     command: [ "sh", "-c", "redis-server --requirepass $$REDIS_PASSWORD" ]
     restart: on-failure
@@ -140,7 +119,7 @@ services:
     ports:
       - "6379:6379"
 
-  postgres:
+  database:
     image: postgres:13.4-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
